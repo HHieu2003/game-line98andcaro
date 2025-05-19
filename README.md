@@ -1,33 +1,53 @@
-Nền Tảng Trò Chơi
-Một nền tảng trò chơi trực tuyến bao gồm hai trò chơi: Line 98 và Caro. Được xây dựng với NestJS cho backend, MongoDB để lưu trữ dữ liệu, Socket.IO cho giao tiếp thời gian thực, và frontend sử dụng HTML, CSS, JavaScript.
+# 🕹️ Nền Tảng Trò Chơi Trực Tuyến: Line 98 & Caro
 
-Tính Năng
+Một nền tảng trò chơi trực tuyến bao gồm hai trò chơi phổ biến: **Line 98** và **Caro**. Hệ thống được xây dựng với NestJS cho backend, MongoDB để lưu trữ dữ liệu, Socket.IO cho giao tiếp thời gian thực, và giao diện người dùng sử dụng HTML, CSS, và JavaScript.
 
-Xác Thực Người Dùng: Đăng ký, đăng nhập, và cập nhật hồ sơ (email, tên, tuổi, mật khẩu).
-Trò Chơi:
-Line 98: Trò chơi giải đố, người chơi xếp các bóng cùng màu để ghi điểm.
-Caro: Trò chơi cờ caro trên lưới 30x30, hỗ trợ chơi đa người qua Socket.IO.
+---
 
+## 🚀 Tính Năng
 
-Chơi Thời Gian Thực: Socket.IO đảm bảo cập nhật trạng thái trò chơi mượt mà.
+- **Xác Thực Người Dùng**:
+  - Đăng ký tài khoản
+  - Đăng nhập
+  - Cập nhật hồ sơ (email, tên, tuổi, mật khẩu)
 
-Công Nghệ
+- **Trò Chơi**:
+  - 🎯 **Line 98**: Trò chơi giải đố, xếp các bóng cùng màu để ghi điểm.
+  - ❌ **Caro**: Trò chơi cờ caro trên lưới 30x30, hỗ trợ nhiều người chơi qua Socket.IO.
 
-Backend: NestJS, Mongoose, Socket.IO
-Frontend: HTML5, CSS3, JavaScript, Socket.IO Client
-Cơ Sở Dữ Liệu: MongoDB (MongoDB Atlas)
-Môi Trường: Node.js, Ngrok (tùy chọn để truy cập công khai)
+- **Chơi Thời Gian Thực**: 
+  - Socket.IO đảm bảo cập nhật trạng thái trò chơi mượt mà, không cần tải lại trang.
 
-Yêu Cầu
-Trước khi cài đặt, hãy đảm bảo bạn có:
+---
 
-Node.js: Phiên bản 16.x trở lên (tải tại nodejs.org).
-Tài Khoản MongoDB Atlas: Để lưu trữ dữ liệu trên đám mây (đăng ký tại mongodb.com).
-Ngrok (tùy chọn): Để công khai ứng dụng (tải tại ngrok.com).
+## 🧰 Công Nghệ Sử Dụng
 
-Cài Đặt
+| Thành phần     | Công nghệ                     |
+|----------------|-------------------------------|
+| Backend        | NestJS, Socket.IO, Mongoose   |
+| Frontend       | HTML5, CSS3, JavaScript       |
+| Cơ sở dữ liệu  | MongoDB (MongoDB Atlas)       |
+| Giao tiếp thời gian thực | Socket.IO           |
+| Môi trường     | Node.js, Ngrok (tuỳ chọn)     |
 
-Tải Mã Nguồn: https://github.com/HHieu2003/game-line98andcaro.git
+---
+
+## 📦 Yêu Cầu Cài Đặt
+
+Trước khi cài đặt, bạn cần đảm bảo:
+
+- ✅ Node.js phiên bản 16.x trở lên ([Tải Node.js](https://nodejs.org))
+- ✅ Tài khoản MongoDB Atlas ([Đăng ký MongoDB](https://www.mongodb.com))
+- ✅ (Tuỳ chọn) Tài khoản Ngrok để public ứng dụng ([Đăng ký Ngrok](https://ngrok.com))
+
+---
+
+## 💾 Cài Đặt
+
+### 1. Tải Mã Nguồn
+```bash
+git clone https://github.com/HHieu2003/game-line98andcaro.git
+```
 
 Thiết Lập MongoDB:
 
