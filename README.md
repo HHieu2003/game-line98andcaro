@@ -100,3 +100,9 @@ ngrok http 3000
 ## Trò Chơi Caro
 
 ![Caro Gameplay](images/giaodien3.png)
+
+## 🎬 Video Hướng Dẫn
+
+📺 [Xem video hướng dẫn trên Google Drive](https://drive.google.com/file/d/1rsYTtLbNzrD06Ak3YM0kmb6jaW7qajDy/view?usp=sharing)
+
+
