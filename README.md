@@ -1,6 +1,6 @@
 # 🎩 Nền Tảng Trò Chơi Trực Tuyến: Line 98 & Caro
 
-Một nền tảng trò chơi trực tuyến bao gồm hai trò chơi phổ biến: **Line 98** và **Caro**. Hệ thống được xây dựng với **NestJS** cho backend, **MongoDB** để lưu trữ dữ liệu, **Socket.IO** cho giao tiếp thời gian thực, và giao diện người dùng sử dụng **HTML, CSS, JavaScript**.
+Một nền tảng trò chơi trực tuyến bao gồm hai trò chơi phổ biến: **Line 98** và **Caro**. Hệ thống được xây dựng với **NestJS** cho backend, **MongoDB** để lưu trữ dữ liệu, **Socket.IO** cho giao tiếp thời gian thực, và giao diện người dùng sử dụng **HTML, CSS, JavaScript**. Ap dụng đúng mô hình **Mvc**.
 
 ---
 
@@ -12,15 +12,8 @@ Một nền tảng trò chơi trực tuyến bao gồm hai trò chơi phổ bi�
 - ✏️ Cập nhật hồ sơ (email, tên, tuổi, mật khẩu)
 
 ### 🎯 Trò Chơi
-- 🎯 **Line 98**: Trò chơi giải đố, xếp các bóng cùng màu để ghi điểm
-- ❌ **Caro**: Trò chơi cờ caro trên lưới 30x30, hỗ trợ chơi đa người qua Socket.IO
-
-### ⏳ Chơi Thời Gian Thực
-- Socket.IO đảm bảo cập nhật trạng thái trò chơi mượt mà, không cần tải lại trang
-
-### 💻 Giao Diện Thân Thiện
-- Thiết kế hiện đại, tương thích với mọi trình duyệt phổ biến (Chrome, Edge, Firefox, v.v.)
-
+- 🎯 **Line 98**: Trò chơi giải đố, xếp các bóng cùng màu đầy đủ yêu cầu chức năng: Logic di chuyển, sinh bóng, animation bóng nổ... tương tự game Line 98. Có animation phóng to các quả bóng, có animation khi lựa chọn di chuyển một quả bóng theo đúng đường đi ngắn nhất trên bản đồ hiện tại. Cung cấp tính năng trợ giúp: di chuyển một quả bóng bất kỳ để đảm bảo tối ưu nhất theo thứ tự: nổ 1 dãy > có cơ hội tạo thành 1 dãy > có thể di chuyển.
+- ❌ **Caro**: Trò chơi cờ caro hỗ trợ chơi 2 chơi trực tuyến với nhau. Tính xem ai thắng và kết thúc ván đấu.
 
 ## 🧰 Công Nghệ Sử Dụng
 
