@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng ký - Máy chủ trò chơi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px 0;
+    }
+
+    .container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 350px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .links {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .links a {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+
+    .links a:hover {
+      text-decoration: underline;
+    }
+
+    .success-message {
+      color: green;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .error-message {
+      color: red;
+      margin-top: 15px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Đăng ký</h1>
+    <div class="form-group">
+      <label for="username">Tên đăng nhập*</label>
+      <input id="username" type="text" placeholder="Nhập tên đăng nhập">
+    </div>
+
+    <div class="form-group">
+      <label for="password">Mật khẩu*</label>
+      <input id="password" type="password" placeholder="Chọn mật khẩu">
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="Nhập email của bạn">
+    </div>
+
+    <div class="form-group">
+      <label for="name">Họ tên</label>
+      <input id="name" type="text" placeholder="Nhập họ tên của bạn">
+    </div>
+
+    <div class="form-group">
+      <label for="age">Tuổi</label>
+      <input id="age" type="number" placeholder="Nhập tuổi của bạn">
+    </div>
+
+    <button onclick="register()">Đăng ký</button>
+    <div id="message" class="success-message"></div>
+    <div id="error" class="error-message"></div>
+
+    <div class="links">
+      <p>Đã có tài khoản? <a href="login">Đăng nhập</a></p>
+    </div>
+  </div>
+
+  <script>
+        let API_BASE_URL = 'http://localhost:3000'; // Giá trị mặc định
+
+    // Fetch config từ server
+    fetch('/config')
+        .then(response => response.json())
+        .then(config => {
+            API_BASE_URL = config.NGROK_URL;
+            
+        
+          
+        })
+        .catch(error => {
+            console.error('Không thể lấy cấu hình:', error);
+        });
+
+    
+    // Check if user is already logged in
+    window.onload = function() {
+      if (localStorage.getItem('token')) {
+        window.location.href = 'index';
+      }
+    };
+
+    function register() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const email = document.getElementById('email').value;
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      
+      if (!username || !password) {
+        document.getElementById('error').innerText = 'Tên đăng nhập và mật khẩu là bắt buộc';
+        return;
+      }
+
+      const data = {
+        username,
+        password,
+        email: email || undefined,
+        name: name || undefined,
+        age: age ? parseInt(age) : undefined,
+      };
+
+      fetch(`${API_BASE_URL}/users/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+        .then(res => {
+          if (!res.ok) {
+            return res.json().then(err => {
+              throw new Error(err.message || 'Đăng ký thất bại');
+            });
+          }
+          return res.json();
+        })
+        .then(data => {
+          document.getElementById('error').innerText = '';
+          document.getElementById('message').innerText = 'Đăng ký thành công! Đang chuyển đến trang đăng nhập...';
+          
+          // Redirect to login page after 2 seconds
+          setTimeout(() => {
+            window.location.href = 'login';
+          }, 2000);
+        })
+        .catch(err => {
+          document.getElementById('error').innerText = `Lỗi: ${err.message}`;
+          document.getElementById('message').innerText = '';
+        });
+    }
+  </script>
+</body>
+
+</html>

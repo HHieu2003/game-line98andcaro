@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trò chơi - Máy chủ trò chơi</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      background-color: #fff;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #user-display {
+      font-weight: bold;
+      color: #ffffff;
+      background-color: #4CAF50;
+      /* màu xanh lá dễ nhìn */
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin-right: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease;
+    }
+
+    h1,
+    h2,
+    h3 {
+      color: #333;
+    }
+
+    .profile-section,
+    .game-selection,
+    .game-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    button.secondary {
+      background-color: #2196F3;
+    }
+
+    button.secondary:hover {
+      background-color: #0b7dda;
+    }
+
+    button.danger {
+      background-color: #f44336;
+    }
+
+    button.danger:hover {
+      background-color: #d32f2f;
+    }
+
+    .game-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .game-buttons button {
+      flex: 1;
+      padding: 15px;
+      font-size: 18px;
+    }
+
+    .game-canvas {
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #line98 {
+      display: none;
+    }
+
+    #caro {
+      display: none;
+    }
+
+    .ball {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      transition: transform 0.9s;
+    }
+
+    .selected {
+      transform: scale(1.2);
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #ccc;
+      text-align: center;
+      line-height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      background-color: #fff;
+    }
+
+    .caro-board {
+      display: grid;
+      grid-template-columns: repeat(30, 40px) !important;
+      grid-template-rows: repeat(30, 40px) !important;
+      gap: 1px;
+      width: 100%;
+      overflow: auto;
+      max-height: 650px;
+      border: 1px solid #000;
+    }
+
+    #debug {
+      color: red;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fdf2f2;
+      border-radius: 4px;
+      display: none;
+    }
+
+    #caro-debug {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #ffeeee;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 20px;
+    }
+
+    .user-info {
+      text-align: right;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Game</h1>
+      <div class="user-info">
+        <span id="user-display"> </span>
+        <button onclick="logout()" class="danger">Đăng xuất</button>
+      </div>
+    </header>
+    <div id="main-content">
+      <button onclick="toggleProfile()" class="secondary" style="    margin-bottom: 15px;
+    padding: 11px;
+    font-size: 19px;">Hiển thị cập nhật hồ sơ</button>
+      <div id="profile" class="profile-section" style="display: none;">
+        <h2>Cập nhật hồ sơ</h2>
+        <div class="form-group">
+          <label for="update-email">Email</label>
+          <input id="update-email" placeholder="Nhập email">
+        </div>
+        <div class="form-group">
+          <label for="update-name">Họ tên</label>
+          <input id="update-name" placeholder="Nhập họ tên">
+        </div>
+        <div class="form-group">
+          <label for="update-age">Tuổi</label>
+          <input id="update-age" type="number" placeholder="Nhập tuổi">
+        </div>
+
+        <!-- Thêm các trường cho đổi mật khẩu -->
+        <div class="form-group">
+          <label for="current-password">Mật khẩu hiện tại</label>
+          <input id="current-password" type="password" placeholder="Nhập mật khẩu hiện tại">
+        </div>
+        <div class="form-group">
+          <label for="new-password">Mật khẩu mới</label>
+          <input id="new-password" type="password" placeholder="Nhập mật khẩu mới">
+        </div>
+
+        <button onclick="updateProfile()" class="secondary">Cập nhật hồ sơ</button>
+      </div>
+
+      <div class="game-selection">
+        <h2>Chọn trò chơi</h2>
+        <div class="game-buttons">
+          <button onclick="playLine98()" class="secondary">Chơi Line 98</button>
+
+          <button onclick="playCaro()" class="secondary">Chơi Caro</button>
+        </div>
+      </div>
+
+      <div id="line98" class="game-container">
+        <h2>Line 98</h2>
+        <div style="margin-bottom: 15px;">
+          <button id="Beginline98" class="secondary">Bắt đầu chơi</button>
+          <button id="restartBtn" class="secondary">Chơi lại</button>
+          <script>
+            document.getElementById("restartBtn").addEventListener("click", () => {
+              if (socket && userId) {
+                socket.emit("line98:init", { userId });
+              }
+            });
+            document.getElementById("Beginline98").addEventListener("click", () => {
+              socket.emit("line98:init", { userId });
+            });
+
+          </script>
+
+          <button onclick="getHelp()" class="secondary">Nhận gợi ý</button>
+
+          <button onclick="backToGameSelection()" class="danger">Quay lại</button>
+        </div>
+
+
+        <canvas id="line98-canvas" width="360" height="360" class="game-canvas"></canvas>
+        <div id="line98-debug"></div>
+      </div>
+
+      <div id="caro" class="game-container">
+        <h2>Caro</h2>
+        <div id="caro-debug"></div>
+        <div id="caro-board" class="caro-board"></div>
+        <div style="margin-top: 15px;">
+          <button onclick="backToGameSelection()" class="danger">Quay lại</button>
+        </div>
+      </div>
+
+      <div id="debug"></div>
+    </div>
+  </div>
+
+  <script>
+    function toggleProfile() {
+      const profileSection = document.getElementById('profile');
+      const toggleButton = document.querySelector('button[onclick="toggleProfile()"]');
+      if (profileSection.style.display === 'none') {
+        profileSection.style.display = 'block';
+        toggleButton.textContent = 'Ẩn cập nhật hồ sơ';
+      } else {
+        profileSection.style.display = 'none';
+        toggleButton.textContent = 'Hiển thị cập nhật hồ sơ';
+      }
+    }
+
+
+    let API_BASE_URL = 'http://localhost:3000'; // Giá trị mặc định
+
+    // Fetch config từ server
+    fetch('/config')
+      .then(response => response.json())
+      .then(config => {
+        API_BASE_URL = config.NGROK_URL || 'http://localhost:3000';
+
+        // Gọi hàm login sau khi có URL
+        function login() {
+          fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password }),
+          })
+        
+        }
+      })
+      .catch(error => {
+        console.error('Không thể lấy cấu hình:', error);
+      });
+
+    let token = null;
+    let userId = null;
+    let username = null;
+    let socket = null;
+    let currentGameId = null;
+    let currentSymbol = null;
+
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', function () {
+      token = localStorage.getItem('token');
+      userId = localStorage.getItem('userId');
+
+      if (!token || !userId) {
+        // Not logged in, redirect to login page
+        window.location.href = "login";
+        return;
+      }
+
+      // Verify token is valid
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        username = payload.username;
+        const expTime = payload.exp * 1000; // Convert to milliseconds
+
+        if (expTime <= Date.now()) {
+          // Token expired
+          logout();
+          return;
+        }
+
+        // Display username
+        document.getElementById('user-display').textContent = `Đã đăng nhập:  ${username}`;
+
+        // Connect socket
+        connectSocket();
+        // Fetch thông tin người dùng ngay khi load trang
+        fetchUserProfile();
+
+      } catch (e) {
+        console.error("Token validation error:", e);
+        logout();
+      }
+    });
+
+    function connectSocket() {
+      socket = io(API_BASE_URL, {
+        autoConnect: false,
+        auth: {
+          token: token
+        },
+        transports: ['websocket']
+      });
+
+      socket.on('connect', () => {
+        console.log('Socket connected:', socket.id);
+      });
+
+      socket.on('connect_error', (err) => {
+        console.log('Connection error:', err);
+      });
+
+      socket.on('disconnect', (reason) => {
+        console.log('Socket disconnected, reason:', reason);
+      });
+
+      socket.connect();
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      window.location.href = "login";
+    }
+
+    function fetchUserProfile() {
+      fetch(`${API_BASE_URL}/users/profile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to fetch profile');
+          }
+          return response.json();
+        })
+        .then(user => {
+          // Điền thông tin vào các trường
+          document.getElementById('update-email').value = user.email || '';
+          document.getElementById('update-name').value = user.name || '';
+          document.getElementById('update-age').value = user.age || '';
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Không thể tải thông tin người dùng');
+        });
+    }
+
+    function updateProfile() {
+      const data = {
+        email: document.getElementById('update-email').value || undefined,
+        name: document.getElementById('update-name').value || undefined,
+        age: parseInt(document.getElementById('update-age').value) || undefined,
+
+        // Thêm xử lý mật khẩu
+        currentPassword: document.getElementById('current-password').value || undefined,
+        newPassword: document.getElementById('new-password').value || undefined
+      };
+
+      fetch(`${API_BASE_URL}/users/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Cập nhật hồ sơ thất bại');
+          }
+          return res.json();
+        })
+        .then(data => {
+          alert('Hồ sơ đã được cập nhật thành công!');
+        })
+        .catch(err => {
+          alert('Lỗi: ' + (err.message || 'Cập nhật hồ sơ thất bại'));
+        });
+    }
+
+    function backToGameSelection() {
+      document.getElementById('line98').style.display = 'none';
+      document.getElementById('caro').style.display = 'none';
+    }
+    function checkColorDifferences() {
+      console.log("Kiểm tra sự khác biệt màu sắc:");
+      pendingBalls.forEach(pendingBall => {
+        const x = pendingBall.x;
+        const y = pendingBall.y;
+
+        // Nếu vị trí này đã có bóng trong lưới chính
+        if (gameState.grid[x][y]) {
+          console.log(`Bóng tại (${x},${y}):`);
+          console.log(`  - Màu bóng nhỏ: ${pendingBall.color}`);
+          console.log(`  - Màu bóng lớn: ${gameState.grid[x][y].color}`);
+
+          if (pendingBall.color !== gameState.grid[x][y].color) {
+            console.log(`  - ⚠️ MÀU KHÁC NHAU!`);
+          }
+        }
+      });
+    }
+    function playLine98() {
+      if (!socket || !socket.connected) {
+        alert('Không kết nối được với máy chủ. Vui lòng làm mới trang.');
+        return;
+      }
+
+      document.getElementById('line98').style.display = 'block';
+      document.getElementById('caro').style.display = 'none';
+      socket.emit('line98:init', { userId });
+      initLine98Canvas();
+    }
+
+
+
+
+
+
+
+    // Updated initLine98Canvas function for the index file
+    function initLine98Canvas() {
+      const canvas = document.getElementById('line98-canvas');
+      const ctx = canvas.getContext('2d');
+      let gameState = null;
+      let pendingBalls = []; // To store upcoming balls that will be shown as small
+
+
+      socket.on('line98:state', ({ state, path, newBalls, exploded, preExplodeGrid, replacedPendingBall }) => {
+        console.log('Received line98:state:', state);
+        console.log('New balls:', newBalls);
+        console.log('Replaced pending ball:', replacedPendingBall);
+
+        console.log('Exploded:', exploded);
+        console.log('Grid before explode:', preExplodeGrid);
+
+        // If a pending ball was replaced during the move, we need to update our local pendingBalls array
+        if (replacedPendingBall && path && path.length > 0) {
+          const targetPos = path[path.length - 1];
+          // Remove any pending ball at the target position
+          pendingBalls = pendingBalls.filter(ball => 
+            !(ball.x === targetPos.x && ball.y === targetPos.y)
+          );
+          console.log('Removed pending ball at target position:', targetPos);
+        }
+
+        // So sánh màu sắc của các bóng mới và bóng hiện tại
+        if (newBalls && gameState) {
+          newBalls.forEach(newBall => {
+            if (gameState.grid[newBall.x][newBall.y]) {
+              console.log(`Màu bóng tại (${newBall.x},${newBall.y}):`);
+              console.log(`  - Màu bóng mới: ${newBall.color}`);
+              console.log(`  - Màu bóng hiện tại: ${gameState.grid[newBall.x][newBall.y].color}`);
+            }
+          });
+        }
+        console.log('Received line98:state:', state);
+
+
+
+        if (exploded && exploded.length > 0 && preExplodeGrid) {
+          const stateWithOldGrid = structuredClone(state);
+          stateWithOldGrid.grid = preExplodeGrid;
+
+          animateExplosion(exploded, stateWithOldGrid, () => {
+            gameState = state;
+            drawGrid(gameState);
+          });
+          return;
+        }
+
+
+
+        gameState = state;
+
+        document.getElementById('line98-debug').innerText = 'Đã nhận trạng thái Line 98';
+
+        if (state.gameOver) {
+          alert(`Kết thúc trò chơi!`);
+          const playAgain = confirm('Bạn có muốn chơi lại không?');
+          if (playAgain) {
+            socket.emit('line98:init', { userId });
+          }
+          return;
+        }
+
+
+        // Store new balls to show as preview (small balls) if provided
+        if (newBalls && newBalls.length > 0) {
+          pendingBalls = newBalls;
+          animateNewBalls(pendingBalls);
+        } else if (!newBalls && !replacedPendingBall) {
+          // Only clear pendingBalls if we didn't get new ones and we didn't replace one
+          pendingBalls = [];
+        }
+
+        if (path && path.length > 0) {
+          animateBallMove(path, gameState);
+        } else {
+          drawGrid(gameState);
+        }
+      });
+
+      socket.on('line98:help', move => {
+        if (move) {
+          // Visual indication of the suggested move
+          const originalState = JSON.parse(JSON.stringify(gameState));
+          highlightHelp(move);
+
+
+        } else {
+          alert('Không có nước đi hợp lệ');
+        }
+      });
+
+
+
+      function drawGrid(state) {
+        if (!state) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let x = 0; x < 9; x++) {
+          for (let y = 0; y < 9; y++) {
+            // Draw grid cell
+            ctx.strokeStyle = '#ccc';
+            ctx.strokeRect(x * 40, y * 40, 40, 40);
+
+            // Draw the ball if exists
+            const ball = state.grid[x][y];
+            if (ball) {
+              drawBall(x, y, ball.color, 15);
+
+              // Highlight selected ball
+              if (state.selectedBall && state.selectedBall.x === x && state.selectedBall.y === y) {
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x * 40 + 20, y * 40 + 20, 18, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.lineWidth = 1;
+              }
+            }
+          }
+        }
+
+        // Draw pending balls (small preview balls)
+        pendingBalls.forEach(ball => {
+          drawBall(ball.x, ball.y, ball.color, 8); // Draw smaller balls for upcoming positions
+        });
+      }
+
+      function drawBall(x, y, color, radius) {
+        ctx.beginPath();
+        ctx.arc(x * 40 + 20, y * 40 + 20, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Add shine effect to make the balls look nicer
+        ctx.beginPath();
+        ctx.arc(x * 40 + 15, y * 40 + 15, radius / 3, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fill();
+      }
+
+      function animateBallMove(path, state) {
+        let index = 0;
+        const targetPos = path[path.length - 1];
+        const targetBall = state.grid[targetPos.x][targetPos.y];
+        if (!targetBall) {
+          drawGrid(state);
+          return;
+        }
+
+        function step() {
+          if (index >= path.length) {
+            drawGrid(state);
+            return;
+          }
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Draw grid and other balls
+          for (let x = 0; x < 9; x++) {
+            for (let y = 0; y < 9; y++) {
+              ctx.strokeRect(x * 40, y * 40, 40, 40);
+              const ball = state.grid[x][y];
+              if (ball && !(x === targetPos.x && y === targetPos.y)) {
+                ctx.beginPath();
+                ctx.arc(x * 40 + 20, y * 40 + 20, 15, 0, 2 * Math.PI);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+              }
+            }
+          }
+
+          // Draw moving ball
+          const pos = path[index];
+          ctx.beginPath();
+          ctx.arc(pos.x * 40 + 20, pos.y * 40 + 20, 15, 0, 2 * Math.PI);
+          ctx.fillStyle = targetBall.color;
+          ctx.fill();
+
+          index++;
+          requestAnimationFrame(step);
+        }
+
+        requestAnimationFrame(step);
+      }
+
+
+      function animateExplosion(positions, state, onComplete) {
+        let frame = 0;
+        const totalFrames = 20;
+
+        function drawExplosion() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawGrid(state); // trạng thái còn bóng
+
+          positions.forEach(({ x, y }) => {
+            const radius = 15 + frame;
+            ctx.beginPath();
+            ctx.arc(x * 40 + 20, y * 40 + 20, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = `rgba(255, 0, 0, ${1 - frame / totalFrames})`; // 💥 Đổi thành đỏ sáng dễ thấy
+            ctx.fill();
+          });
+
+          frame++;
+          if (frame <= totalFrames) {
+            // 🧠 Gọi lại chính nó để tiếp tục animation!
+            requestAnimationFrame(drawExplosion);
+          } else {
+            // ✅ Hoàn tất: gọi callback sau animation
+            onComplete?.();
+          }
+        }
+
+        drawExplosion(); // ✅ GỌI TRỰC TIẾP, không cần requestAnimationFrame ngay ban đầu
+      }
+
+
+      function animateNewBalls(newBalls) {
+        const totalFrames = 30; // Tăng số frame để animation mượt hơn
+        let frame = 0;
+
+        function growBalls() {
+          if (frame >= totalFrames) {
+            // Cập nhật game state nhưng giữ nguyên bóng
+            drawGrid(gameState);
+            return;
+          }
+
+          const radius = 8 + (frame / totalFrames) * 7; // Từ 8 đến 15
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Vẽ lưới và các bóng hiện tại
+          for (let x = 0; x < 9; x++) {
+            for (let y = 0; y < 9; y++) {
+              ctx.strokeStyle = '#ccc';
+              ctx.strokeRect(x * 40, y * 40, 40, 40);
+
+              const ball = gameState.grid[x][y];
+              if (ball) {
+                // Kiểm tra xem có phải bóng mới không
+                const isNewBall = newBalls.some(nb => nb.x === x && nb.y === y);
+
+                if (isNewBall) {
+                  drawBall(x, y, ball.color, radius);
+                } else {
+                  drawBall(x, y, ball.color, 15);
+                }
+              }
+            }
+          }
+
+          frame++;
+        }
+
+        requestAnimationFrame(growBalls);
+      }
+
+      function highlightHelp(move) {
+        // Highlight the suggested move path
+        animateBallMove([move.from, ...move.path, move.to], gameState);
+
+        // Change the state to show the destination
+        const tempState = JSON.parse(JSON.stringify(gameState));
+        if (tempState.grid[move.from.x][move.from.y]) {
+          tempState.selectedBall = move.from;
+          drawGrid(tempState);
+
+          setTimeout(() => {
+            // Show where to move to
+            ctx.beginPath();
+            ctx.arc(move.to.x * 40 + 20, move.to.y * 40 + 20, 15, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+            ctx.fill();
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }, 500);
+        }
+      }
+
+      canvas.addEventListener('click', e => {
+        if (!gameState) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) / 40);
+        const y = Math.floor((e.clientY - rect.top) / 40);
+
+        if (x < 0 || x >= 9 || y < 0 || y >= 9) return;
+
+        if (gameState.selectedBall) {
+          socket.emit('line98:move', {
+            userId,
+            from: gameState.selectedBall,
+            to: { x, y }
+          });
+          gameState.selectedBall = null;
+        } else if (gameState.grid[x][y]) {
+          gameState.selectedBall = { x, y };
+          drawGrid(gameState);
+        }
+      });
+    }
+
+
+
+
+
+    function getHelp() {
+      if (!socket || !socket.connected) {
+        alert('Không kết nối được với máy chủ');
+        return;
+      }
+      socket.emit('line98:help', { userId });
+    }
+
+    function playCaro() {
+      if (!socket || !socket.connected) {
+        alert('Không kết nối được với máy chủ. Vui lòng làm mới trang.');
+        return;
+      }
+
+      document.getElementById('line98').style.display = 'none';
+      document.getElementById('caro').style.display = 'block';
+      socket.emit('caro:join', { userId });
+      initCaroBoard();
+    }
+    socket.on('caro:error', ({ message }) => {
+      const debugDiv = document.getElementById('caro-debug');
+      debugDiv.innerText = `Lỗi: ${message}`;
+      debugDiv.style.display = 'block';
+    });
+    function initCaroBoard() {
+      const board = document.getElementById('caro-board');
+      const size = 30;
+      board.innerHTML = '';
+      board.style.gridTemplateColumns = `repeat(${size}, 30px)`;
+      board.style.gridTemplateRows = `repeat(${size}, 30px)`;
+
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.x = i;
+          cell.dataset.y = j;
+          cell.addEventListener('click', () => {
+            if (!currentGameId || !userId) {
+              return;
+            }
+            socket.emit('caro:move', { gameId: currentGameId, userId, x: i, y: j });
+          });
+          board.appendChild(cell);
+        }
+      }
+
+      socket.on('caro:state', game => {
+        currentGameId = game.gameId;
+        currentSymbol = game.players.find(p => p.userId === userId)?.symbol;
+        document.getElementById('caro-debug').innerText =
+          `Trò chơi: Cờ Caro | Ký hiệu của bạn: ${currentSymbol} | Trạng thái: ${game.status === 'waiting' ? 'Đang chờ' : game.status === 'playing' ? 'Đang chơi' : 'Kết thúc'} | Lượt hiện tại: ${game.currentTurn}`;
+
+        const cells = board.getElementsByClassName('cell');
+        for (let i = 0; i < size; i++) {
+          for (let j = 0; j < size; j++) {
+            const index = i * size + j;
+            cells[index].textContent = game.board[i][j] || '';
+          }
+        }
+
+        if (game.status === 'waiting') {
+          alert('Đang chờ người chơi khác tham gia...');
+        } else if (game.status === 'finished') {
+          if (game.winner === userId) {
+            alert('Chúc mừng! Bạn đã thắng!');
+          } else if (game.winner) {
+            alert('Bạn đã thua!');
+          } else {
+            alert('Trò chơi kết thúc với kết quả hòa!');
+          }
+          backToGameSelection();
+        }
+      });
+
+      socket.on('caro:error', ({ message }) => {
+        const debugDiv = document.getElementById('caro-debug');
+        debugDiv.innerText = `Lỗi: ${message}`;
+        debugDiv.style.display = 'block';
+      });
+    }
+
+    function showGameOverUI(score) {
+      const msg = `Kết thúc trò chơi! Điểm của bạn: ${score}`;
+      const debug = document.getElementById('line98-debug');
+      debug.textContent = msg;
+      debug.style.display = 'block';
+    }
+
+  </script>
+</body>
+
+</html>
